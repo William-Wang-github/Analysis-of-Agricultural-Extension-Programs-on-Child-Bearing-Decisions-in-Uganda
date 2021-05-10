@@ -1,0 +1,921 @@
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  C:\Users\hatho\Desktop\University Stuff\Economics\ECO403\Research Paper\Data for agricultural extension\programs\ECO403 Our Regression Results.log
+  log type:  text
+ opened on:  15 Apr 2021, 22:03:06
+
+. set more off
+
+. clear // Removes any data from memory every time this script is run.
+
+. 
+. * Imports dataset, replace with wherever you have saved the data
+. use "C:\Users\hatho\Desktop\University Stuff\Economics\ECO403\Research Paper\Data for agricultural extension\programs\data\ready_hh.dta",clear
+
+. 
+. * If you have not already done so please install the following STATA packages to be able to properly run the code, rdrobust (using "net install rdrobust, from (https://raw.githubusercontent.com/rdpackages/rdrobust/master
+> /stata) replace")
+. 
+. * Generates identifiers for each villiage
+. egen vid=group(c_code s_code p_code lc1_code)
+
+. label var vid "Village identifier"
+
+. bys vid: gen villhh=_N
+
+. 
+. * Creates a global variable for each bandwidth, 2 km, 1.5 km, and 3 km, as well as the controls/covariates used in the regressions 
+. global default "c(0) h(2) vce(nncluster vid 17)"
+
+. global small "c(0) h(1.5) vce(nncluster vid 17)"
+
+. global large "c(0) h(3) vce(nncluster vid 17)"
+
+. global control "hhheadage hhheadlit member distance hhr_gender imonth" 
+
+. 
+. * Creates a dummy for controls
+. gen baldata=1
+
+. foreach j of varlist $control {
+  2.         replace baldata=0 if `j'==.
+  3.         }
+(162 real changes made)
+(29 real changes made)
+(69 real changes made)
+(0 real changes made)
+(55 real changes made)
+(12 real changes made)
+
+.         
+. * Generates the bins for the distance 
+. egen bins = cut(mdistance), at(-6(0.1)6) 
+
+. replace bins=bins+0.05
+(7,206 real changes made)
+
+. 
+. *******************************************************************************
+. *       ECO403 OUR HEALTH REGRESSIONS
+. *******************************************************************************
+. 
+. * OUR Health Awareness Regressions without covariates/controls
+. rdrobust health mdistance,$default
+
+Sharp RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =       7206
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |      4393        2813            Kernel        = Triangular
+Eff. Number of obs |      1398        1842            VCE method    =  NNcluster
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |     2.000       2.000
+       BW bias (b) |     2.000       2.000
+         rho (h/b) |     1.000       1.000
+Number of clusters |        74          99
+
+Outcome: health. Running variable: mdistance.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .00649     .02083   0.3117   0.755   -.034333      .047316
+            Robust |     -          -     3.3213   0.001    .025755      .099915
+--------------------------------------------------------------------------------
+Std. Err. adjusted for clusters in vid
+
+. rdrobust health mdistance,$small
+
+Sharp RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =       7206
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |      4393        2813            Kernel        = Triangular
+Eff. Number of obs |      1058        1431            VCE method    =  NNcluster
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |     1.500       1.500
+       BW bias (b) |     1.500       1.500
+         rho (h/b) |     1.000       1.000
+Number of clusters |        54          77
+
+Outcome: health. Running variable: mdistance.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .03713     .02006   1.8506   0.064   -.002194      .076451
+            Robust |     -          -     4.6541   0.000    .035844      .087996
+--------------------------------------------------------------------------------
+Std. Err. adjusted for clusters in vid
+
+. rdrobust health mdistance,$large
+
+Sharp RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =       7206
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |      4393        2813            Kernel        = Triangular
+Eff. Number of obs |      2044        2431            VCE method    =  NNcluster
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |     3.000       3.000
+       BW bias (b) |     3.000       3.000
+         rho (h/b) |     1.000       1.000
+Number of clusters |       111         134
+
+Outcome: health. Running variable: mdistance.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .00544     .01891   0.2879   0.773   -.031618      .042507
+            Robust |     -          -     0.8441   0.399   -.024617      .061856
+--------------------------------------------------------------------------------
+Std. Err. adjusted for clusters in vid
+
+. 
+. * # of obs for this health regression without covariates/controls
+. sum health if abs(mdistance)<2 
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+      health |      3,240    .0669753    .2500178          0          1
+
+. sum health if abs(mdistance)<1.5
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+      health |      2,489    .0658899    .2481394          0          1
+
+. sum health if abs(mdistance)<3
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+      health |      4,475    .0755307    .2642753          0          1
+
+. 
+. * Control mean for this health regression without covariates/controls
+. sum health if mdistance>0 & mdistance<2
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+      health |      1,842    .0526602    .2234148          0          1
+
+. sum health if mdistance>0 & mdistance<1.5
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+      health |      1,431    .0573026    .2325011          0          1
+
+. sum health if mdistance>0 & mdistance<3
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+      health |      2,431    .0559441    .2298609          0          1
+
+. 
+. *OUR Health Awareness Regressions with covariates/controls
+. rdrobust health mdistance,covs($control)$default
+
+Covariate-adjusted sharp RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =       6879
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |      4199        2680            Kernel        = Triangular
+Eff. Number of obs |      1337        1748            VCE method    =  NNcluster
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |     2.000       2.000
+       BW bias (b) |     2.000       2.000
+         rho (h/b) |     1.000       1.000
+Number of clusters |        74          99
+
+Outcome: health. Running variable: mdistance.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .00925     .02155   0.4294   0.668   -.032987      .051496
+            Robust |     -          -     3.6177   0.000    .031846      .107151
+--------------------------------------------------------------------------------
+Covariate-adjusted estimates. Additional covariates included: 6
+Std. Err. adjusted for clusters in vid
+
+. rdrobust health mdistance,covs($control)$small
+
+Covariate-adjusted sharp RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =       6879
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |      4199        2680            Kernel        = Triangular
+Eff. Number of obs |      1008        1355            VCE method    =  NNcluster
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |     1.500       1.500
+       BW bias (b) |     1.500       1.500
+         rho (h/b) |     1.000       1.000
+Number of clusters |        54          77
+
+Outcome: health. Running variable: mdistance.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .04019     .02065   1.9462   0.052   -.000285      .080663
+            Robust |     -          -     5.6359   0.000    .048657      .100544
+--------------------------------------------------------------------------------
+Covariate-adjusted estimates. Additional covariates included: 6
+Std. Err. adjusted for clusters in vid
+
+. rdrobust health mdistance,covs($control)$large
+
+Covariate-adjusted sharp RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =       6879
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |      4199        2680            Kernel        = Triangular
+Eff. Number of obs |      1957        2315            VCE method    =  NNcluster
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |     3.000       3.000
+       BW bias (b) |     3.000       3.000
+         rho (h/b) |     1.000       1.000
+Number of clusters |       111         134
+
+Outcome: health. Running variable: mdistance.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .01028     .01954   0.5262   0.599   -.028009      .048569
+            Robust |     -          -     0.9026   0.367   -.024068      .065154
+--------------------------------------------------------------------------------
+Covariate-adjusted estimates. Additional covariates included: 6
+Std. Err. adjusted for clusters in vid
+
+. 
+. * # of obs for this health regression with covariates/controls
+. sum health if abs(mdistance)<2 & baldata==1  
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+      health |      3,085    .0677472    .2513523          0          1
+
+. sum health if abs(mdistance)<1.5 & baldata==1 
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+      health |      2,363    .0660178    .2483657          0          1
+
+. sum health if abs(mdistance)<3 & baldata==1 
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+      health |      4,272    .0763109    .2655259          0          1
+
+. 
+. * Control mean for this health regression with covariates/controls
+. sum health if mdistance>0 & mdistance<2 & baldata==1 
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+      health |      1,748    .0526316    .2233608          0          1
+
+. sum health if mdistance>0 & mdistance<1.5 & baldata==1 
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+      health |      1,355    .0568266    .2315964          0          1
+
+. sum health if mdistance>0 & mdistance<3 & baldata==1 
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+      health |      2,315    .0557235    .2294366          0          1
+
+. 
+. *******************************************************************************
+. *       ECO403 OUR CHILD0 REGRESSIONS
+. *******************************************************************************
+. 
+. * Summary for the number of children under 5
+. sum num5
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+        num5 |      7,206    .7474327     .958278          0          8
+
+. 
+. * OUR Regressions for children less than 1 without covariates/controls
+. rdrobust child0 mdistance,$default
+
+Sharp RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =       7206
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |      4393        2813            Kernel        = Triangular
+Eff. Number of obs |      1398        1842            VCE method    =  NNcluster
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |     2.000       2.000
+       BW bias (b) |     2.000       2.000
+         rho (h/b) |     1.000       1.000
+Number of clusters |        74          99
+
+Outcome: child0. Running variable: mdistance.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .01177     .00448   2.6263   0.009    .002987      .020561
+            Robust |     -          -     -1.4861  0.137   -.019213      .002642
+--------------------------------------------------------------------------------
+Std. Err. adjusted for clusters in vid
+
+. rdrobust child0 mdistance,$small
+
+Sharp RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =       7206
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |      4393        2813            Kernel        = Triangular
+Eff. Number of obs |      1058        1431            VCE method    =  NNcluster
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |     1.500       1.500
+       BW bias (b) |     1.500       1.500
+         rho (h/b) |     1.000       1.000
+Number of clusters |        54          77
+
+Outcome: child0. Running variable: mdistance.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .00406     .00413   0.9834   0.325   -.004032      .012152
+            Robust |     -          -     -3.0802  0.002   -.024613      -.00547
+--------------------------------------------------------------------------------
+Std. Err. adjusted for clusters in vid
+
+. rdrobust child0 mdistance,$large
+
+Sharp RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =       7206
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |      4393        2813            Kernel        = Triangular
+Eff. Number of obs |      2044        2431            VCE method    =  NNcluster
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |     3.000       3.000
+       BW bias (b) |     3.000       3.000
+         rho (h/b) |     1.000       1.000
+Number of clusters |       111         134
+
+Outcome: child0. Running variable: mdistance.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .02063     .00457   4.5147   0.000    .011672       .02958
+            Robust |     -          -     1.3805   0.167   -.002981      .017182
+--------------------------------------------------------------------------------
+Std. Err. adjusted for clusters in vid
+
+. 
+. * # of obs for this child0 regression without covariates/controls
+. sum child0 if abs(mdistance)<2 
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+      child0 |      3,240    .0679012    .2516152          0          1
+
+. sum child0 if abs(mdistance)<1.5
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+      child0 |      2,489    .0626758    .2424276          0          1
+
+. sum child0 if abs(mdistance)<3
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+      child0 |      4,475    .0694972    .2543262          0          1
+
+. 
+. * Control mean for this child0 regression without covariates/controls
+. sum child0 if mdistance>0 & mdistance<2
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+      child0 |      1,842    .0770901    .2668068          0          1
+
+. sum child0 if mdistance>0 & mdistance<1.5
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+      child0 |      1,431    .0726765    .2596954          0          1
+
+. sum child0 if mdistance>0 & mdistance<3
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+      child0 |      2,431    .0765117    .2658698          0          1
+
+. 
+. * OUR Regressions for children less than 1 with covariates/controls
+. rdrobust child0 mdistance,covs($control)$default
+
+Covariate-adjusted sharp RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =       6879
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |      4199        2680            Kernel        = Triangular
+Eff. Number of obs |      1337        1748            VCE method    =  NNcluster
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |     2.000       2.000
+       BW bias (b) |     2.000       2.000
+         rho (h/b) |     1.000       1.000
+Number of clusters |        74          99
+
+Outcome: child0. Running variable: mdistance.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .00748     .00593   1.2613   0.207   -.004142      .019095
+            Robust |     -          -     -1.4454  0.148   -.022556      .003408
+--------------------------------------------------------------------------------
+Covariate-adjusted estimates. Additional covariates included: 6
+Std. Err. adjusted for clusters in vid
+
+. rdrobust child0 mdistance,covs($control)$small
+
+Covariate-adjusted sharp RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =       6879
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |      4199        2680            Kernel        = Triangular
+Eff. Number of obs |      1008        1355            VCE method    =  NNcluster
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |     1.500       1.500
+       BW bias (b) |     1.500       1.500
+         rho (h/b) |     1.000       1.000
+Number of clusters |        54          77
+
+Outcome: child0. Running variable: mdistance.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional | -.00085     .00552   -0.1546  0.877   -.011681      .009974
+            Robust |     -          -     -1.7410  0.082   -.021104      .001249
+--------------------------------------------------------------------------------
+Covariate-adjusted estimates. Additional covariates included: 6
+Std. Err. adjusted for clusters in vid
+
+. rdrobust child0 mdistance,covs($control)$large
+
+Covariate-adjusted sharp RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =       6879
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |      4199        2680            Kernel        = Triangular
+Eff. Number of obs |      1957        2315            VCE method    =  NNcluster
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |     3.000       3.000
+       BW bias (b) |     3.000       3.000
+         rho (h/b) |     1.000       1.000
+Number of clusters |       111         134
+
+Outcome: child0. Running variable: mdistance.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .01802     .00575   3.1344   0.002    .006753      .029293
+            Robust |     -          -     0.6439   0.520   -.008529      .016876
+--------------------------------------------------------------------------------
+Covariate-adjusted estimates. Additional covariates included: 6
+Std. Err. adjusted for clusters in vid
+
+. 
+. * # of obs for this child0 regression with covariates/controls
+. sum child0 if abs(mdistance)<2 & baldata==1  
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+      child0 |      3,085    .0670989    .2502337          0          1
+
+. sum child0 if abs(mdistance)<1.5 & baldata==1 
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+      child0 |      2,363    .0617859    .2408172          0          1
+
+. sum child0 if abs(mdistance)<3 & baldata==1 
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+      child0 |      4,272    .0690543    .2535761          0          1
+
+. 
+. * Control mean for this child0 regression with covariates/controls
+. sum child0 if mdistance>0 & mdistance<2 & baldata==1 
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+      child0 |      1,748    .0749428    .2633744          0          1
+
+. sum child0 if mdistance>0 & mdistance<1.5 & baldata==1 
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+      child0 |      1,355    .0708487    .2566667          0          1
+
+. sum child0 if mdistance>0 & mdistance<3 & baldata==1 
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+      child0 |      2,315      .07473     .263012          0          1
+
+. 
+. *******************************************************************************
+. *       ECO403 OUR CHILD2 REGRESSIONS
+. *******************************************************************************
+. 
+. * OUR Regressions for children less than 5 without covariates/controls
+. rdrobust child2 mdistance,$default
+
+Sharp RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =       7206
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |      4393        2813            Kernel        = Triangular
+Eff. Number of obs |      1398        1842            VCE method    =  NNcluster
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |     2.000       2.000
+       BW bias (b) |     2.000       2.000
+         rho (h/b) |     1.000       1.000
+Number of clusters |        74          99
+
+Outcome: child2. Running variable: mdistance.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .09941     .01009   9.8537   0.000    .079639      .119186
+            Robust |     -          -     11.2253  0.000    .106702      .151845
+--------------------------------------------------------------------------------
+Std. Err. adjusted for clusters in vid
+
+. rdrobust child2 mdistance,$small
+
+Sharp RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =       7206
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |      4393        2813            Kernel        = Triangular
+Eff. Number of obs |      1058        1431            VCE method    =  NNcluster
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |     1.500       1.500
+       BW bias (b) |     1.500       1.500
+         rho (h/b) |     1.000       1.000
+Number of clusters |        54          77
+
+Outcome: child2. Running variable: mdistance.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .11648     .00991   11.7573  0.000     .09706      .135894
+            Robust |     -          -     10.4631  0.000    .088649      .129517
+--------------------------------------------------------------------------------
+Std. Err. adjusted for clusters in vid
+
+. rdrobust child2 mdistance,$large
+
+Sharp RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =       7206
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |      4393        2813            Kernel        = Triangular
+Eff. Number of obs |      2044        2431            VCE method    =  NNcluster
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |     3.000       3.000
+       BW bias (b) |     3.000       3.000
+         rho (h/b) |     1.000       1.000
+Number of clusters |       111         134
+
+Outcome: child2. Running variable: mdistance.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .07455     .00967   7.7120   0.000    .055602      .093494
+            Robust |     -          -     11.0399  0.000    .104704      .149906
+--------------------------------------------------------------------------------
+Std. Err. adjusted for clusters in vid
+
+. 
+. * # of obs for this child2 regression without covariates/controls
+. sum child2 if abs(mdistance)<2 
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+      child2 |      3,240    .2475309    .4316443          0          1
+
+. sum child2 if abs(mdistance)<1.5
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+      child2 |      2,489    .2454801     .430458          0          1
+
+. sum child2 if abs(mdistance)<3
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+      child2 |      4,475     .252514     .434503          0          1
+
+. 
+. * Control mean for this child2 regression without covariates/controls
+. sum child2 if mdistance>0 & mdistance<2 
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+      child2 |      1,842    .2589577    .4381813          0          1
+
+. sum child2 if mdistance>0 & mdistance<1.5
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+      child2 |      1,431     .256464    .4368336          0          1
+
+. sum child2 if mdistance>0 & mdistance<3
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+      child2 |      2,431    .2653229    .4415958          0          1
+
+. 
+. * OUR Regressions for children less than 5 with covariates/controls
+. rdrobust child2 mdistance,covs($control)$default
+
+Covariate-adjusted sharp RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =       6879
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |      4199        2680            Kernel        = Triangular
+Eff. Number of obs |      1337        1748            VCE method    =  NNcluster
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |     2.000       2.000
+       BW bias (b) |     2.000       2.000
+         rho (h/b) |     1.000       1.000
+Number of clusters |        74          99
+
+Outcome: child2. Running variable: mdistance.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .09623     .01125   8.5509   0.000    .074172      .118286
+            Robust |     -          -     8.9799   0.000    .107144      .166974
+--------------------------------------------------------------------------------
+Covariate-adjusted estimates. Additional covariates included: 6
+Std. Err. adjusted for clusters in vid
+
+. rdrobust child2 mdistance,covs($control)$small
+
+Covariate-adjusted sharp RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =       6879
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |      4199        2680            Kernel        = Triangular
+Eff. Number of obs |      1008        1355            VCE method    =  NNcluster
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |     1.500       1.500
+       BW bias (b) |     1.500       1.500
+         rho (h/b) |     1.000       1.000
+Number of clusters |        54          77
+
+Outcome: child2. Running variable: mdistance.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .11082     .01174   9.4365   0.000    .087803      .133837
+            Robust |     -          -     8.5732   0.000    .108998      .173605
+--------------------------------------------------------------------------------
+Covariate-adjusted estimates. Additional covariates included: 6
+Std. Err. adjusted for clusters in vid
+
+. rdrobust child2 mdistance,covs($control)$large
+
+Covariate-adjusted sharp RD estimates using local polynomial regression.
+
+      Cutoff c = 0 | Left of c  Right of c            Number of obs =       6879
+-------------------+----------------------            BW type       =     Manual
+     Number of obs |      4199        2680            Kernel        = Triangular
+Eff. Number of obs |      1957        2315            VCE method    =  NNcluster
+    Order est. (p) |         1           1
+    Order bias (q) |         2           2
+       BW est. (h) |     3.000       3.000
+       BW bias (b) |     3.000       3.000
+         rho (h/b) |     1.000       1.000
+Number of clusters |       111         134
+
+Outcome: child2. Running variable: mdistance.
+--------------------------------------------------------------------------------
+            Method |   Coef.    Std. Err.    z     P>|z|    [95% Conf. Interval]
+-------------------+------------------------------------------------------------
+      Conventional |  .07238     .01057   6.8464   0.000    .051663      .093107
+            Robust |     -          -     9.5007   0.000     .10166      .154505
+--------------------------------------------------------------------------------
+Covariate-adjusted estimates. Additional covariates included: 6
+Std. Err. adjusted for clusters in vid
+
+. 
+. * # of obs for this child2 regression with covariates/controls
+. sum child2 if abs(mdistance)<2 & baldata==1  
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+      child2 |      3,085    .2502431    .4332232          0          1
+
+. sum child2 if abs(mdistance)<1.5 & baldata==1 
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+      child2 |      2,363    .2479898    .4319373          0          1
+
+. sum child2 if abs(mdistance)<3 & baldata==1 
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+      child2 |      4,272    .2553839    .4361278          0          1
+
+. 
+. * Control mean for this child2 regression with covariates/controls
+. sum child2 if mdistance>0 & mdistance<2 & baldata==1 
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+      child2 |      1,748    .2614416    .4395457          0          1
+
+. sum child2 if mdistance>0 & mdistance<1.5 & baldata==1 
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+      child2 |      1,355    .2597786    .4386749          0          1
+
+. sum child2 if mdistance>0 & mdistance<3 & baldata==1 
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+      child2 |      2,315    .2682505    .4431445          0          1
+
+. 
+. 
+. *******************************************************************************
+. *       ECO403 OUR HEALTH FIGURE DISCONTINUITY IN COVARIATES
+. *******************************************************************************
+. 
+. * Household health discontinuity graph*
+. 
+. * Generates the mean of the health variable, sorting by our bins variable we made
+. bysort bins: egen mean_health = mean (health) 
+
+. 
+. * Does a local polynomial regression weighted by kernel for left of bandwidth for health variable, i.e. the trend, and generates a variable for the confidence interval
+. lpoly health mdistance if mdistance<=0 & mdistance>=-3, degree(1) kernel(triangle) bwidth(2) /// 
+>  nograph generate(x_left y_left) se(shat_left) n(100) 
+
+.  quietly gen yhigh_left=y_left+1.96*shat_left
+
+.  quietly gen ylow_left=y_left-1.96*shat_left 
+
+. 
+. * Does a local polynomial regression weighted by kernel for right of bandwidth for health variable, i.e. the trend, and generates a variable for the confidence interval
+. lpoly health mdistance if mdistance>0 & mdistance<=3, degree(1) kernel(triangle) bwidth(2)  ///
+> nograph generate(x_right y_right)  se(shat_right)  n(100) 
+
+.  quietly gen yhigh_right=y_right+1.96*shat_right
+
+.  quietly gen ylow_right=y_right-1.96*shat_right
+
+. 
+. * Generates the health bandwidth graph
+. #delimit ;
+delimiter now ;
+. twoway (scatter yhigh_left y_left ylow_left x_left if x_left<=0 & x_left>=-3, m(none none none) connect(l l l) lcolor(gray black gray) lpat(shortdash solid shortdash))
+> (scatter yhigh_right y_right ylow_right x_right if x_right>0 & x_right<=3, m(none none none) connect(l l l) lcolor(gray black gray) lpat(shortdash solid shortdash))
+> (scatter mean_health bins if abs(mdistance)<=3, msize(medsmall) msymbol(circle) mfcolor(white) mlcolor(black) mlwidth(thin))
+> (scatteri 0 0 0.6 0, recast(line) lcolor(cranberry) lpattern(dash)), 
+> ytitle("Household health awareness rate", size(medsmall) margin(small)) ylabel(0(0.2)0.6,labsize(medsmall)  format(%9.1f)) xtitle("Distance from Cutoff", size(medsmall) margin(small)) xlabel(-3(1)3, labsize(medsmall)) //
+>  Generates axis labels
+> graphregion(fcolor(white) lcolor(white)) legend(order(2 "Local polynomial fit" 3 "95% C.I."  7 "0.1-km bin" 8 "Cutoff value" )) plotregion(lcolor(black) lwidth(thin));
+
+. // Generates the graph legend
+> #delimit cr
+delimiter now cr
+. graph export "healthfighead.eps", as(eps) preview(off) replace
+(file healthfighead.eps written in EPS format)
+
+. drop x_left y_left shat_left yhigh_left ylow_left x_right y_right shat_right yhigh_right ylow_right  // Saves the graph and drops the variables created to be used in other plots
+
+. 
+. 
+. *******************************************************************************
+. *       ECO403 OUR CHILDREN FIGURES DISCONTINUITY IN COVARIATES
+. *******************************************************************************
+. 
+. * Household has children less than 1 discontinuity graph*
+. 
+. * Generates the mean of the child0 variable, sorting by our bins variable
+. bysort bins: egen mean_child0 = mean (child0) 
+
+. 
+. * Does a local polynomial regression weighted by kernel for left of bandwidth for child0 variable, i.e. the trend, and generates a variable for the confidence interval
+. lpoly child0 mdistance if mdistance<=0 & mdistance>=-3, degree(1) kernel(triangle) bwidth(2) /// 
+>  nograph generate(x_left y_left) se(shat_left) n(100) 
+
+.  quietly gen yhigh_left=y_left+1.96*shat_left
+
+.  quietly gen ylow_left=y_left-1.96*shat_left
+
+.  
+. * Does a local polynomial regression weighted by kernel for right of bandwidth for child0 variable, i.e. the trend, and generates a variable for the confidence interval
+. lpoly child0 mdistance if mdistance>0 & mdistance<=3, degree(1) kernel(triangle) bwidth(2)  ///
+> nograph generate(x_right y_right)  se(shat_right)  n(100) 
+
+.  quietly gen yhigh_right=y_right+1.96*shat_right
+
+.  quietly gen ylow_right=y_right-1.96*shat_right
+
+. 
+. * Generates the child0 bandwidth graph
+. #delimit ;
+delimiter now ;
+. twoway (scatter yhigh_left y_left ylow_left x_left if x_left<=0 & x_left>=-3, m(none none none) connect(l l l) lcolor(gray black gray) lpat(shortdash solid shortdash))
+> (scatter yhigh_right y_right ylow_right x_right if x_right>0 & x_right<=3, m(none none none) connect(l l l) lcolor(gray black gray) lpat(shortdash solid shortdash))
+> (scatter mean_child0 bins if abs(mdistance)<=3, msize(medsmall) msymbol(circle) mfcolor(white) mlcolor(black) mlwidth(thin))
+> (scatteri 0 0 0.6 0, recast(line) lcolor(cranberry) lpattern(dash)), 
+> ytitle("Household with children under 1", size(medsmall) margin(small)) ylabel(0(0.2)0.6,labsize(medsmall)  format(%9.1f)) xtitle("Distance from Cutoff", size(medsmall) margin(small)) xlabel(-3(1)3, labsize(medsmall)) //
+>  Generates axis labels
+> graphregion(fcolor(white) lcolor(white)) legend(order(2 "Local polynomial fit" 3 "95% C.I."  7 "0.1-km bin" 8 "Cutoff value" )) plotregion(lcolor(black) lwidth(thin));
+
+.  // Generates the graph legend
+> #delimit cr
+delimiter now cr
+. graph export "child0fighead.eps", as(eps) preview(off) replace
+(file child0fighead.eps written in EPS format)
+
+. drop x_left y_left shat_left yhigh_left ylow_left x_right y_right shat_right yhigh_right ylow_right  // Saves the graph and drops the variables created to be used in other plots
+
+. 
+. *******************************************************************************
+. 
+. * Household has children less than 5 discontinuity graph*
+. 
+. * Generates the mean of the child2 variable, sorting by our bins variable
+. bysort bins: egen mean_child2 = mean (child2) 
+
+. 
+. * Does a local polynomial regression weighted by kernel for left of bandwidth for child2 variable, i.e. the trend, and generates a variable for the confidence interval
+. lpoly child2 mdistance if mdistance<=0 & mdistance>=-3, degree(1) kernel(triangle) bwidth(2) /// 
+>  nograph generate(x_left y_left) se(shat_left) n(100) 
+
+.  quietly gen yhigh_left=y_left+1.96*shat_left
+
+.  quietly gen ylow_left=y_left-1.96*shat_left
+
+. 
+. * Does a local polynomial regression weighted by kernel for right of bandwidth for child2 variable, i.e. the trend, and generates a variable for the confidence interval
+. lpoly child2 mdistance if mdistance>0 & mdistance<=3, degree(1) kernel(triangle) bwidth(2)  ///
+> nograph generate(x_right y_right)  se(shat_right)  n(100) 
+
+.  quietly gen yhigh_right=y_right+1.96*shat_right
+
+.  quietly gen ylow_right=y_right-1.96*shat_right
+
+.  
+. * Generates the child2 bandwidth graph
+. #delimit ;
+delimiter now ;
+. twoway (scatter yhigh_left y_left ylow_left x_left if x_left<=0 & x_left>=-3, m(none none none) connect(l l l) lcolor(gray black gray) lpat(shortdash solid shortdash))
+> (scatter yhigh_right y_right ylow_right x_right if x_right>0 & x_right<=3, m(none none none) connect(l l l) lcolor(gray black gray) lpat(shortdash solid shortdash))
+> (scatter mean_child2 bins if abs(mdistance)<=3, msize(medsmall) msymbol(circle) mfcolor(white) mlcolor(black) mlwidth(thin))
+> (scatteri 0 0 0.6 0, recast(line) lcolor(cranberry) lpattern(dash)), 
+> ytitle("Household with children under 5", size(medsmall) margin(small)) ylabel(0(0.2)0.6,labsize(medsmall)  format(%9.1f)) xtitle("Distance from Cutoff", size(medsmall) margin(small)) xlabel(-3(1)3, labsize(medsmall)) //
+>  Generates axis labels
+> graphregion(fcolor(white) lcolor(white)) legend(order(2 "Local polynomial fit" 3 "95% C.I."  7 "0.1-km bin" 8 "Cutoff value" )) plotregion(lcolor(black) lwidth(thin));
+
+.  // Generates the graph legend
+> #delimit cr
+delimiter now cr
+. graph export "child2fighead.eps", as(eps) preview(off) replace
+(file child2fighead.eps written in EPS format)
+
+. drop x_left y_left shat_left yhigh_left ylow_left x_right y_right shat_right yhigh_right ylow_right // Saves the graph and drops the variables created to be used in other plots
+
+.  
+.  
+. log close 
+      name:  <unnamed>
+       log:  C:\Users\hatho\Desktop\University Stuff\Economics\ECO403\Research Paper\Data for agricultural extension\programs\ECO403 Our Regression Results.log
+  log type:  text
+ closed on:  15 Apr 2021, 22:03:21
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
